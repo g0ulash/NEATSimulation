@@ -16,13 +16,19 @@ public class Food {
     public int value; //<0 is poison
     public Point location;
     public int diameter;
-    public Color color;
     
-    public Food(Point location){
-        this.value = 25000;
+    public Food(Point location, int value){
+        this.value = value;
         this.location = location;
-        this.diameter = 5;
-        this.color = Color.GREEN;
+        this.diameter = 14;
+    }
+
+    public Color getColor(){
+        if(this.value<0){
+            return Color.red;
+        } else{
+            return Color.green;
+        }
     }
     
     public void update(){
