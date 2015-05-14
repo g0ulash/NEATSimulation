@@ -16,15 +16,17 @@ public class NEAT {
 
     ArrayList<Agent> population;
     ArrayList<Brain.Genome.Link> innovations;
-    Random rng = new Random();
+    Random rng;
 
-    public NEAT(ArrayList<Agent> population) {
+    public NEAT(ArrayList<Agent> population, Random rng) {
         this.population = population;
+        this.rng = rng;
         Brain.INNOVATION_NUMBER=0;
     }
 
     public void update() {
         //clear current innovations
+        //TODO: reset innovations each generation, move to agent?
         innovations = new ArrayList<>();
         //update population
         for (Iterator<Agent> iter = this.population.iterator(); iter.hasNext();) {
@@ -39,14 +41,12 @@ public class NEAT {
             System.out.println("ERROR POPULATION SIZE");
         }
         ArrayList<Agent> newAgents = new ArrayList<>();
-        while(population.size()>=10 && population.size()+newAgents.size()<=48){
+        while(population.size()>=2 && population.size()+newAgents.size()<=48){
             //selection, pick 2 for reproduction
             Agent agent1 = this.selection();
             Agent agent2 = this.selection();
             while(agent2==agent1){
                 agent2 = this.selection();
-                System.out.println("SAME AGENT");
-                System.out.println(population.size());
             }
             newAgents.add(agent1.copy());
             newAgents.add(agent2.copy());
@@ -60,14 +60,14 @@ public class NEAT {
 
     private Agent selection(){
         Agent selected = population.get(0);
-        double total = Math.tanh(population.get(0).fitness() / Simulation.valueFood);
+        double total = population.get(0).fitness();
 
         for( int i = 1; i < population.size(); i++ ) {
             if(total<=0){
                 System.out.println("ERROR FITNESS <0");
             }
-            total += Math.tanh(population.get(i).fitness()/Simulation.valueFood);
-            if( rng.nextDouble() <= (Math.tanh(population.get(i).fitness()/Simulation.valueFood) / total)) {
+            total += population.get(i).fitness();
+            if( rng.nextDouble() <= (population.get(i).fitness() / total)) {
                 selected = population.get(i);
             }
         }

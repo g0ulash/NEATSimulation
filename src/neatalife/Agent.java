@@ -19,6 +19,7 @@ public class Agent {
     public float yVelocity;
     
     public int energy;
+    public int age;
     public Point location;
     public int diameter;
     public Color color;
@@ -26,7 +27,7 @@ public class Agent {
     public Point[] eyesLocation;
     public int[] eyesDiameter;
     public Color[] eyesColor;
-    Random rng = new Random();
+    Random rng;
     
     public float[] input;
     //input current energy;
@@ -35,9 +36,11 @@ public class Agent {
         this.xVelocity = 0;
         this.yVelocity = 0;
         this.energy = (int)Simulation.valueFood;
+        this.age = 0;
         this.location = location;
         this.diameter = 16;
         this.color = Color.BLUE;
+        rng = new Random(location.x);
         
         int nSensors = 4;
         this.input = new float[nSensors*3+1];
@@ -47,14 +50,15 @@ public class Agent {
         this.eyesDiameter = new int[nSensors];
         for(int i=0; i<this.eyesDiameter.length; i++) {
             this.eyesDiameter[i] = this.diameter*2;
+            this.eyesColor[i] = new Color(0, 0, 0);
         }
         this.updateEyeLocation();
 
-        this.brain = new Brain(this.input.length, 2);
+        this.brain = new Brain(this.input.length, 2, rng);
     }
     
     public int fitness(){
-        return Math.max(0, energy);
+        return Math.max(0, age);
     }
     
     public void updateEyeLocation() {         
@@ -71,20 +75,23 @@ public class Agent {
         this.brain.setInput(this.input);
         this.brain.execute();
         float[] output = this.brain.getOutput();
-        this.xVelocity = output[0]*2;
-        this.yVelocity = output[1]*2;
+        int modifier = 6;
+        this.xVelocity = output[0]*modifier;
+        this.yVelocity = output[1]*modifier;
         
         //update energy
         //System.out.println("NN cost: "+(this.brain.genome.nodes.size()+this.brain.genome.links.size()));
         //System.out.println("movement cost: "+Math.sqrt(Math.pow(xVelocity, 2)+Math.pow(yVelocity, 2)));
-        float basecost = 50f;
-        float movementcost = (float)Math.sqrt(Math.pow(xVelocity, 2)+Math.pow(yVelocity, 2))*10;
-        float braincost = (float) (Math.pow(this.brain.genome.nodes.size() + this.brain.genome.links.size(), 2)/50000);
-        this.energy-=movementcost+basecost+braincost;
+        float energyCost = Math.max(0, this.energy)/10000;
+        float basecost = Simulation.valueFood/1000;
+        float movementcost = (float)Math.sqrt(Math.pow(xVelocity, 2)+Math.pow(yVelocity, 2));
+        float braincost = (float) (Math.pow(this.brain.genome.nodes.size() + this.brain.genome.links.size(), 2)/100000);
+        this.energy-=(basecost+braincost+energyCost)*(modifier/2);
+        this.age++;
     }
 
     public Agent copy(){
-        Agent newAgent = new Agent(new Point((int)(this.location.x+rng.nextGaussian()*15), (int)(this.location.y+rng.nextGaussian()*15)));
+        Agent newAgent = new Agent(new Point((int)(this.location.x+rng.nextGaussian()*2), (int)(this.location.y+rng.nextGaussian()*2)));
         newAgent.brain = this.brain.copy();
         return newAgent;
     }

@@ -14,11 +14,13 @@ import java.awt.Point;
 public class Food {
     
     public int value; //<0 is poison
+    public int age;
     public Point location;
     public int diameter;
     
     public Food(Point location, int value){
         this.value = value;
+        this.age = 0;
         this.location = location;
         this.diameter = 14;
     }
@@ -32,6 +34,6 @@ public class Food {
     }
     
     public void update(){
-        //mutate
+        this.age++;
     }
 }

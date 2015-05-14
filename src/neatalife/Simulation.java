@@ -10,6 +10,7 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,7 +23,7 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
     public ArrayList<Food> foods;
     public ArrayList<Agent> agents;
     public NEAT neat;
-    Random rng = new Random();
+    Random rng;
     public boolean stopped;
     public int nFood;
     public int nPoison;
@@ -43,6 +44,7 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
         this.nFood = nFood;
         this.nAgents = nAgents;
         this.nPoison = (int)(0.5f*nFood);
+        this.rng = new Random(0);
 
         foods = new ArrayList<>(nFood);
         agents = new ArrayList<>(nAgents);
@@ -51,7 +53,7 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
             this.agents.add(new Agent(location));
         }
 
-        this.neat = new NEAT(agents);
+        this.neat = new NEAT(agents, rng);
         this.repaint();
     }
 
@@ -100,16 +102,16 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
                     }
                     //borders
                     if(eye.x+eyeDiameter/2>this.getWidth() || eye.x-eyeDiameter/2<0 || eye.y+eyeDiameter/2>this.getHeight() || eye.y-eyeDiameter/2 < 0){
-                        agent.input[0 + (3 * i)] += 0;
-                        agent.input[1 + (3 * i)] += 0;
-                        agent.input[2 + (3 * i)] += 255f/2;
+                        agent.input[0 + (3 * i)] += 255f/3;
+                        agent.input[1 + (3 * i)] += 255f/3;
+                        agent.input[2 + (3 * i)] += 255f/3;
                     }
 
                     //cap
-                    agent.input[0 + (3 * i)] = Math.min(agent.input[0 + (3 * i)], 255) / 300;
-                    agent.input[1 + (3 * i)] = Math.min(agent.input[1 + (3 * i)], 255) / 300;
-                    agent.input[2 + (3 * i)] = Math.min(agent.input[2 + (3 * i)], 255) / 300;
-                    agent.eyesColor[i] = new Color(agent.input[0 + (i * 3)], agent.input[1 + (i * 3)], agent.input[2 + (i * 3)]);
+                    agent.input[0 + (3 * i)] = Math.min(agent.input[0 + (3 * i)], 255) / 256;
+                    agent.input[1 + (3 * i)] = Math.min(agent.input[1 + (3 * i)], 255) / 256;
+                    agent.input[2 + (3 * i)] = Math.min(agent.input[2 + (3 * i)], 255) / 256;
+                    agent.eyesColor[i] = new Color(agent.input[0 + (i * 3)]/1.2f, agent.input[1 + (i * 3)]/1.2f, agent.input[2 + (i * 3)]/1.2f);
 
                     //System.out.println(agent.input[0 + (i * 3)]+" "+agent.input[1 + (i * 3)]+" "+agent.input[2 + (i * 3)]);
                     //Color eyeColor = new Color(agent.input[0 + (i * 3)], agent.input[1 + (i * 3)], agent.input[2 + (i * 3)]);
@@ -120,7 +122,6 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
             //check borders
             for (Agent agent : this.agents) {
                 agent.update();
-                //TODO: move to agent?
                 boolean collision=false;
                 if (agent.location.x >= this.getWidth() && agent.xVelocity > 0) {
                     agent.xVelocity = 0;
@@ -144,9 +145,6 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
                 agent.location.setLocation(agent.location.x + agent.xVelocity, agent.location.y + agent.yVelocity);
                 agent.updateEyeLocation();
             }
-            for (Food food : this.foods) {
-                food.update();
-            }
 
             //check collisions
             for (Agent a1 : this.agents) {
@@ -154,9 +152,11 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
                     if (a1 != a2) {
                         double d = a1.location.distance(a2.location);
                         if (d < a1.diameter / 2 + a2.diameter / 2) {
-                            //TODO: check overlap
                             double overlap = a1.diameter / 2 + a2.diameter / 2 - d;
                             Point dir = new Point(a2.location.x - a1.location.x, a2.location.y - a1.location.y);
+                            double l = Math.sqrt(dir.x*dir.x+dir.y*dir.y);
+                            dir.setLocation(dir.x/l, dir.y/l);
+                            dir.setLocation(dir.x*(overlap), dir.y*(overlap));
                             //dir.length= overlap/2 
                             a2.location.translate(dir.x / 4, dir.y / 4);
                             a1.location.translate(-dir.x / 4, -dir.y / 4);
@@ -176,6 +176,15 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
                 }
             }
 
+            //relocate food
+            for (Iterator<Food> iter = this.foods.iterator(); iter.hasNext();) {
+                Food food = iter.next();
+                food.update();
+                if(food.age>100000){
+                    iter.remove();
+                }
+            }
+
             //spawn food
             int currentnFood = 0;
             int currentnPoison = 0;
@@ -188,14 +197,38 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
             }
             ArrayList<Food> foodsTemp = new ArrayList<>();
             for (int i = currentnFood; i < nFood-nPoison; i++) {
-                Point location = new Point(rng.nextInt(this.getWidth()-10)+10, rng.nextInt(this.getHeight()-10)+10);
+                Point location;
+                Double minDistance;
+                int l = 0;
+                do{
+                    location = new Point(rng.nextInt(this.getWidth()-20)+10, rng.nextInt(this.getHeight()-20)+10);
+                    minDistance = Double.MAX_VALUE;
+                    for (Agent agent: agents){
+                        minDistance = Math.min(minDistance, location.distance(agent.location));
+                    }
+                    for (Food food: foods){
+                        minDistance = Math.min(minDistance, location.distance(food.location));
+                    }
+                    l++;
+                } while(minDistance<66 && l<1000);
                 Food newFood = new Food(location, (int)valueFood);
                 foodsTemp.add(newFood);
             }
             this.foods.addAll(foodsTemp);
+            //spawn poison
             foodsTemp = new ArrayList<>();
             for (int i = currentnPoison; i < nPoison; i++) {
-                Point location = new Point(rng.nextInt(this.getWidth()-10)+10, rng.nextInt(this.getHeight()-10)+10);
+                Point location;
+                Double minDistance;
+                int l = 0;
+                do{
+                    location = new Point(rng.nextInt(this.getWidth()-20)+10, rng.nextInt(this.getHeight()-20)+10);
+                    minDistance = Double.MAX_VALUE;
+                    for (Food food: foods){
+                        minDistance = Math.min(minDistance, location.distance(food.location));
+                    }
+                    l++;
+                } while(minDistance<64 && l<1000);
                 Food newFood = new Food(location, (int)valueFood);
                 newFood.value*=-1;
                 //newFood.value*=0.2f;
@@ -207,19 +240,29 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
             this.neat.update();
 
             //print statistic
+            //TODO: track statistics
             int totalFood = 0;
+            long totalAgeFood = 0;
+            long totalAgePoison = 0;
             for (Food food : this.foods) {
                 totalFood += food.value;
+                if(food.value>0) {
+                    totalAgeFood += food.age;
+                } else{
+                    totalAgePoison += food.age;
+                }
             }
             int totalFitness = 0;
+            int totalEnergy = 0;
             int currentnAgents = 0;
             int totalBrainsize = 0;
             for (Agent agent : this.agents) {
                 totalFitness += agent.fitness();
+                totalEnergy += agent.energy;
                 currentnAgents += 1;
                 totalBrainsize+=agent.brain.genome.nodes.size()+agent.brain.genome.links.size();
             }
-            if(currentnAgents<=10){
+            if(currentnAgents<2){
                 //this.poisonProb*=1.1f;
                 Simulation.valueFood*=1.5f;
                 this.init(this.nAgents, this.nFood);
@@ -228,13 +271,19 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
             }
 
             //update drawing
-            System.out.println("epoch: "+epoch+" valueFood: " + Simulation.valueFood+" totalFood: " + totalFood + " nAgents: " + currentnAgents + " averageFitness " + (totalFitness / (currentnAgents+0.001))+ " averageBrainSize " + (totalBrainsize / (currentnAgents+0.001)));
             if(System.currentTimeMillis()-currentTime>33) {
                 this.repaint();
                 currentTime=System.currentTimeMillis();
+                System.out.println("epoch: "+epoch+" valueFood: " + Simulation.valueFood+" totalFood: " + totalFood
+                        +" avgAgeFood: "+ totalAgeFood/(nFood-nPoison)+" avgAgePoison: " + totalAgePoison/(nPoison) + " nAgents: "
+                        + currentnAgents + " avgFitness " + (totalFitness / (currentnAgents))+" avgEnergy: "+ totalEnergy/(currentnAgents)
+                        + " avgBrainSize " + (totalBrainsize / (currentnAgents)));
             }
             if(epoch>500000){
-                this.sleep=10;
+                //this.sleep=50;
+            }
+            if(epoch>600000){
+                //this.sleep=0;
             }
             if(this.sleep>0) {
                 try {
@@ -256,10 +305,17 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
             g.fillOval(food.location.x - food.diameter / 2, food.location.y - food.diameter / 2, food.diameter, food.diameter);
         }
         float maxEnergy = 1;
+        int maxAge = 1;
+        Agent maxAgent = null;
         for (Agent agent : new ArrayList<Agent>(this.agents)) {
             maxEnergy = Math.max(maxEnergy, agent.energy);
+            if(agent.age>maxAge){
+                maxAgent=agent;
+            }
+            maxAge = Math.max(maxAge, agent.age);
         }
 
+        g.setColor(Color.black);
         for (Agent agent : new ArrayList<Agent>(this.agents)) {
             for (int i = 0; i < agent.eyesLocation.length; i++) {
                 g.setColor(agent.eyesColor[i]);
@@ -267,11 +323,20 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
                 int eyeDiameter = agent.eyesDiameter[i];
                 g.fillOval(eye.x - eyeDiameter / 2, eye.y - eyeDiameter / 2, eyeDiameter, eyeDiameter);
             }
+        }
+        for (Agent agent : new ArrayList<Agent>(this.agents)) {
             g.setColor(agent.color);
             g.fillOval(agent.location.x - agent.diameter / 2, agent.location.y - agent.diameter / 2, agent.diameter, agent.diameter);
-            float w = (float)Math.tanh(agent.fitness() / maxEnergy);
+            if(maxAgent!=null && agent==maxAgent){
+                g.setColor(new Color(255, 255,0));
+                g.fillOval(agent.location.x - agent.diameter / 2, agent.location.y - agent.diameter / 2, agent.diameter, agent.diameter);
+            }
+            float w = (float)Math.tanh(agent.age / maxAge);
             g.setColor(new Color(w,w,w));
-            g.fillOval(agent.location.x - agent.diameter / 4, agent.location.y - agent.diameter / 4, agent.diameter/2, agent.diameter/2);
+            g.fillOval(agent.location.x - agent.diameter / 4, agent.location.y - agent.diameter / 4 - agent.diameter / 4, agent.diameter/2, agent.diameter/2);
+            float gr = (float)Math.max(0, Math.tanh(agent.energy / maxEnergy));
+            g.setColor(new Color(0,gr,0));
+            g.fillOval(agent.location.x - agent.diameter / 4, agent.location.y - agent.diameter / 4 + agent.diameter / 4, agent.diameter/2, agent.diameter/2);
             g.setColor(Color.black);
         }
 

@@ -101,6 +101,7 @@ public class NeatAlife extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButtonCreateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCreateActionPerformed
+        //TODO: rework GUI
         simulation1.init(50,50);
     }//GEN-LAST:event_jButtonCreateActionPerformed
 
@@ -112,7 +113,7 @@ public class NeatAlife extends javax.swing.JFrame {
     private void jButtonStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStopActionPerformed
         //simulation1.stopped=true;
         if(simulation1.sleep==0) {
-            simulation1.sleep = 100;
+            simulation1.sleep = 50;
         } else{
             simulation1.sleep = 0;
         }

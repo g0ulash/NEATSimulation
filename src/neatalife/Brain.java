@@ -17,15 +17,16 @@ public class Brain {
     public static int INNOVATION_NUMBER=0;
     float[] input;
     float[] output;
-    Random rng = new Random();
     Genome genome;
+    Random rng;
 
     public enum Type {input, hidden, output}
 
-    public Brain(int inputSize, int outputSize) {
+    public Brain(int inputSize, int outputSize, Random rng) {
+        this.rng = rng;
         input = new float[inputSize];
         output = new float[outputSize];
-        genome = new Genome(input.length, output.length);
+        genome = new Genome(input.length, output.length, rng);
     }
 
     public void setInput(float[] input) {
@@ -38,12 +39,10 @@ public class Brain {
 
     public void execute() {
         this.output=genome.execute(this.input);
-        //this.output[0] = rng.nextFloat()*2-1;
-        //this.output[1] = rng.nextFloat()*2-1;
     }
 
     public Brain copy(){
-        Brain newBrain = new Brain(this.genome.inputSize, this.genome.outputSize);
+        Brain newBrain = new Brain(this.genome.inputSize, this.genome.outputSize, this.rng);
         newBrain.genome = this.genome.copy();
         return newBrain;
     }
@@ -54,14 +53,15 @@ public class Brain {
         public ArrayList<Link> links;
         public int inputSize;
         public int outputSize;
-        public float mutationRate = 0.05f;
+        public float mutationRate = 0.1f;
         public float crossoverRate = 0.1f;
         public int currentId;
 
-        public Random rng = new Random();
+        public Random rng;
 
-        public Genome(int inputSize1, int outputSize1){
+        public Genome(int inputSize1, int outputSize1, Random rng){
             //init nodes
+            this.rng=rng;
             this.inputSize = inputSize1+1;
             this.outputSize = outputSize1;
             nodes=new ArrayList<>(inputSize+outputSize);
@@ -91,39 +91,40 @@ public class Brain {
             }
         }
 
-        public void mutate(ArrayList<Link> innovations){
+        public void mutate(ArrayList<Link> innovations) {
             //normal mutations
-            for(Link link: links) {
+            for (Link link : links) {
                 if (rng.nextFloat() <= mutationRate) {
-                    link.weight+=rng.nextGaussian();
+                    link.weight += rng.nextGaussian();
                 }
             }
 
             //Structural mutation
             //add links
-            if(rng.nextFloat()<=mutationRate && links.size()<1500){
+            if (rng.nextFloat() <= mutationRate && links.size() < 1000) {
                 //pick two random nodes
                 Node node1 = nodes.get(rng.nextInt(nodes.size()));
                 Node node2 = nodes.get(rng.nextInt(nodes.size()));
-                while(node2==node1 || node2.type==Type.input){
+                while (node2.type == Type.input) {
                     node2 = nodes.get(rng.nextInt(nodes.size()));
                 }
                 //check exists
-                boolean exists=false;
+                boolean exists = false;
                 Link newLink = null;
-                for(Link link: links){ //todo: optimize
-                    if(!link.enabled && link.input==node1 && link.output==node2){
-                        exists=true;
+                for (Link link : links) { //TODO: optimize
+                    if (!link.enabled && link.input == node1 && link.output == node2) {
+                        exists = true;
                         //reenable
-                        link.enabled=true;
+                        link.enabled = true;
                         newLink = link;
                     }
                 }
                 //else insert link
-                if(!exists){
+                if (!exists) {
                     newLink = new Link();
                     newLink.input = node1;
                     newLink.output = node2;
+                    newLink.weight = (float) rng.nextGaussian();
                 }
 
                 //check others in population, update innovation number.
@@ -132,27 +133,30 @@ public class Brain {
 
             //add node
             ArrayList<Link> newLinks = new ArrayList<>();
-            for(Link link: links){
-                if(rng.nextFloat()<=mutationRate && links.size()<1500){
-                    if(link.enabled){
-                        //disable existing
-                        link.enabled=false;
-                        //insert new node and links
-                        Node newNode = new Node(Type.hidden, currentId);
-                        currentId++;
-                        nodes.add(newNode);
-                        Link newLink1 = new Link();
-                        newLink1.input = link.input;
-                        newLink1.output = newNode;
-                        checkInnovations(innovations, newLink1);
-                        Link newLink2 = new Link();
-                        newLink2.input = newNode;
-                        newLink2.weight = link.weight;
-                        newLink2.output = link.output;
-                        checkInnovations(innovations, newLink2);
-                        newLinks.add(newLink1);
-                        newLinks.add(newLink2);
-                    }
+            if (rng.nextFloat() <= mutationRate && links.size() < 1000) {
+                Link link = links.get(rng.nextInt(links.size()));
+                while(!link.enabled){
+                    link = links.get(rng.nextInt(links.size()));
+                }
+                if (link.enabled) {
+                    //disable existing
+                    link.enabled = false;
+                    //insert new node and links
+                    Node newNode = new Node(Type.hidden, currentId);
+                    currentId++;
+                    nodes.add(newNode);
+                    Link newLink1 = new Link();
+                    newLink1.input = link.input;
+                    newLink1.weight = 1;
+                    newLink1.output = newNode;
+                    checkInnovations(innovations, newLink1);
+                    Link newLink2 = new Link();
+                    newLink2.input = newNode;
+                    newLink2.weight = link.weight;
+                    newLink2.output = link.output;
+                    checkInnovations(innovations, newLink2);
+                    newLinks.add(newLink1);
+                    newLinks.add(newLink2);
                 }
             }
             links.addAll(newLinks);
@@ -177,12 +181,11 @@ public class Brain {
         }
 
         public void crossover(){
-
+            //TODO: impl crossover
         }
 
         public Genome copy(){
-            //TODO: impl copy
-            Genome copy = new Genome(this.inputSize-1, this.outputSize);
+            Genome copy = new Genome(this.inputSize-1, this.outputSize, this.rng);
             copy.nodes = new ArrayList<>();
             for(Node node: this.nodes){
                 copy.nodes.add(node.copy());
@@ -257,7 +260,7 @@ public class Brain {
             public int innovation;
 
             public Link(){
-                this.weight = 1;
+                this.weight = 0;
                 this.enabled = true;
             }
 
@@ -266,7 +269,7 @@ public class Brain {
                 newLink.weight = this.weight;
                 newLink.innovation = this.innovation;
                 newLink.enabled = this.enabled;
-                //TODO: efficiency.
+                //TODO: optimize.
                 for(Node node:nodes){
                     if(this.input.id==node.id){
                         newLink.input = node;
