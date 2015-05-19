@@ -1,16 +1,63 @@
 \section{Methods}
 
-To see whether sexual reproduction is indeed preferred over asexual reproduction in a fast changing environment, an Artificial Life simulation was designed in Java. In this simulation, NEAT was used as an algorithm to evolve neural networks, which will be the brains of the agents.
+To see whether sexual reproduction is indeed preferred over asexual reproduction in a fast changing environment, an Artificial Life simulation was designed in Java. In this simulation, NEAT was used as an algorithm to evolve recurrent neural networks, which will be the brains of the agents.
 
 \subsection{Simulation}
 
 The simulated world is a simple 2D world with both food and poison represented by different colors.
-Agents, whose brains will be evolved using NEAT, will inhabit this environment and have an extra evolvable parameter that determines whether they will reproduce sexually or asexually. 
-The input to the neural network of each agent will be two small 'eyes' that can read the pixel value in-front of them and the output will be their movement, one output for moving forward and one for turning. 
-Agents can then reproduce if they surpass a certain energy threshold, energy can be gained by eating food, and lost when eating poison. 
+In the environment, the agents will move around and eat food to collect energy.
+The simulation is completely written in Java\footnote{For source code, see \url{http://github.com/g0ulash/NEATSimulation } NOTE: THIS GitHuB IS STILL PRIVATE}.
+
+\subsubsection{Environment}
+
+The environment consists of an empty field where food and poison are randomly spawned away from other food and agents - see Figure \ref{fig:env} for an example.
+The environmental changes will be the food and poison, which will have some chance of switching and changing in value resulting in food becoming poison and vice versa. 
+Obviously, nutrient food gives agents energy and poisonous food reduces the energy of an agent.
+The amount of food will always be kept constant, so if one piece disappears there will be a new spawned piece of food on a random place.
+There are also the borders, which enclose the environment.
+If an agent collides with the border it will also lose energy.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{environment.png}
+\caption{An environment filled with agents, poisonous and nutricious food.}
+\label{fig:env}
+\end{figure}
+
+\subsubsection{Agents}
+
+Each agent, see Figure \ref{fig:agent} for an example, will have a recurrent neural network as a brain, which will be evolved using the NEAT algorithm.
+They will inhabit this environment and have an extra evolvable parameter that determines whether they will reproduce sexually or asexually. 
+The age of the agents is the number of iterations that it has been alive, which will also be the fitness function.
+Each iteration, agents lose energy and when their energy is fully depleted, they will die.
+So their goal is to try and find nutrient food and avoid poison to replenish their energy.
+Agents can then reproduce if they surpass a certain energy threshold.
 If they reproduce asexually they can only create offspring with mutation, while if they reproduce sexually they can create offspring with cross-over and mutation. 
-There will be two experiments, one where the environment changes slowly and one where it will change more rapidly. The environmental changes will be the food and poison, which will have some chance of switching and changing in value resulting in food becoming poison and vice versa. 
-Thus in a rapid changing environment poison and food will switch more frequently and with higher magnitude than in a slow changing environment.
+
+The input to the neural network of each agent are four color sensors for each direction that can read the pixel value next to them.
+Each color sensor is an RGB valued sensor, which results in $12$ input represented as floats.
+The last input will be their own energy level, which makes it a total of $13$ inputs.
+The output will be their movement which are output as 2 dimensional coordinates.
+The activation function of the neural network is a hyperbolic tangent. 
+
+\begin{figure}[H]
+\begin{subfigure}[b]{0.5\linewidth}
+    \centering
+    \includegraphics{agent_nofood.png}
+\end{subfigure}%
+\begin{subfigure}[b]{0.5\linewidth}
+    \centering
+    \includegraphics{agent_food.png}
+\end{subfigure}
+\caption{Agents as represented in the simulation. The left agent is an agent in rest state, which has nothing surrounding to sense and the right agent is one that senses food.}
+\label{fig:agent}
+\end{figure}
+
+\subsubsection{Updates}
+
+The number of the agents in the environment is kept constant.
+For example, if two agents die then two new offsprings are created using NEAT.
+The agents that will be selected using roulette wheel selection, where the probability of selecting an agent is proportional to his fitness function, which is the age of an agent.
 
 \subsection{NEAT}
 
@@ -63,3 +110,8 @@ If a species has not improved over a certain amount of generations, it can be de
 Based on the fitness value of the species, each species will have a percentage of spots for the new generation.
 
 \subsection{Analysis}
+There will be two experiments, one where the environment changes slowly and one where it will change more rapidly. 
+Thus in a rapid changing environment poison and food will switch more frequently and with higher magnitude than in a slow changing environment.
+Ideally there will be multiple experiments, where the pace of changes in the environment is increased in small steps.
+In this way the results could show if there is a certain turnover point where the sexual reproduction starts becoming advantagouos, if our hypothesis is correct.
+However, this will only be possible to be tested if there is enough time.
