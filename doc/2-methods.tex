@@ -72,6 +72,13 @@ Each arc has values for its input node, output node, the weight on the arc, whet
 The innovation number is the historical value, which allows the crossover operations to detect if the gene is similar to another gene in a different genome.
 Each node contains a unique identification number, activation response threshold, whether it is enabled or not and also an innovation number.
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{genopheno.png}
+\caption{Genotype to phenotype mapping in NEAT.}
+\label{fig:gen}
+\end{figure}
+
 Mutation can occur randomly in NEAT and it can change arc weights, activation thresholds and the network topology.
 The weights and thresholds can be changed when a random arc or node is chosen and the values are constrained.
 The network topology changes by randomly adding nodes or arcs.
@@ -82,6 +89,13 @@ And a last special case, if there is no arc between the two nodes, but an equiva
 Mutation of nodes arrives in another fashion, as instead of randomly choosing two nodes, the algorithm now takes an arc, disables it and also adds a new node.
 This node, with a random activation threshold, will be connected to the nodes that were connected to the disabled arc - effectively creating two new arcs as well.
 The weight of the disabled arc will be copied to the output arc of the new node and the weight of the input arc will be set to one, such that it does not interfere with any learning that has taken place, yet.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{mutation.png}
+\caption{The two types of mutation in NEAT.}
+\label{fig:mut}
+\end{figure}
 
 Before crossover can be introduced, the innovation numbers have to be explained.
 Since the innovation numbers are not unique to genes specifically but only to the innovation (i.e. new gene), you can compare two genomes in the population and check if they share any genes.
@@ -108,6 +122,13 @@ If other genomes in one species are diverging from their own species towards ano
 Through certain fitness testing, NEAT can identify whether or not new genomes in a species have improved fitness compared to the original genome in that species.
 If a species has not improved over a certain amount of generations, it can be deleted entirely from the population - because this means that a certain innovation did not have enough impact.
 Based on the fitness value of the species, each species will have a percentage of spots for the new generation.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{crossover.png}
+\caption{Crossover as it is specified in NEAT.}
+\label{fig:cross}
+\end{figure}
 
 \subsection{Analysis}
 There will be two experiments, one where the environment changes slowly and one where it will change more rapidly. 
