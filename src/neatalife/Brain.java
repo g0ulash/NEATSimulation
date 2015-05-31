@@ -55,6 +55,7 @@ public class Brain {
         public int outputSize;
         public float mutationRate = 0.1f;
         public float crossoverRate = 0.1f;
+        public boolean crossover;
         public int currentId;
 
         public Random rng;
@@ -64,6 +65,7 @@ public class Brain {
             this.rng=rng;
             this.inputSize = inputSize1+1;
             this.outputSize = outputSize1;
+            this.crossover = false;
             nodes=new ArrayList<>(inputSize+outputSize);
             this.currentId=0;
             for(int i=0; i<inputSize;i++) {
@@ -92,6 +94,11 @@ public class Brain {
         }
 
         public void mutate(ArrayList<Link> innovations) {
+            //mutate crossover
+            if (rng.nextFloat() <= mutationRate*0.1) {
+                //this.crossover = !this.crossover;
+            }
+
             //normal mutations
             for (Link link : links) {
                 if (rng.nextFloat() <= mutationRate) {
@@ -133,7 +140,7 @@ public class Brain {
 
             //add node
             ArrayList<Link> newLinks = new ArrayList<>();
-            if (rng.nextFloat() <= mutationRate && links.size() < 1000) {
+            if (rng.nextFloat() <= mutationRate*0.5 && nodes.size() < 1000) {
                 Link link = links.get(rng.nextInt(links.size()));
                 while(!link.enabled){
                     link = links.get(rng.nextInt(links.size()));
@@ -180,10 +187,6 @@ public class Brain {
             }
         }
 
-        public void crossover(){
-            //TODO: impl crossover
-        }
-
         public Genome copy(){
             Genome copy = new Genome(this.inputSize-1, this.outputSize, this.rng);
             copy.nodes = new ArrayList<>();
@@ -195,6 +198,7 @@ public class Brain {
                 copy.links.add(link.copy(copy.nodes));
             }
             copy.currentId = this.currentId;
+            copy.crossover = this.crossover;
             return copy;
         }
 
@@ -221,6 +225,13 @@ public class Brain {
                 output[i] = this.nodes.get(this.inputSize+i).output;
             }
             return output;
+        }
+
+        public Node addNode() {
+            Node newNode = new Node(Type.hidden, currentId);
+            currentId++;
+            nodes.add(newNode);
+            return newNode;
         }
 
         public class Node{

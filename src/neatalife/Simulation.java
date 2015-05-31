@@ -30,6 +30,7 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
     public static float valueFood=10000;
     public int nAgents;
     public int sleep=0;
+    public int REVERSE_FREQ = 200000;
 
     /**
      * Creates new form Simulation2
@@ -52,18 +53,12 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
             Point location = new Point(rng.nextInt(this.getWidth()), rng.nextInt(this.getHeight()));
             this.agents.add(new Agent(location));
         }
+        for (int i =0; i< nAgents; i++){
+            this.agents.get(i).brain.genome.crossover=true;
+        }
 
         this.neat = new NEAT(agents, rng);
         this.repaint();
-    }
-
-    public boolean checkCircCollision(Agent agent1, Agent agent2) {
-        //if pythagoras-calculated distance between middle points is smaller then combined radius: 
-        Point r1 = agent1.location;
-        Point r2 = agent2.location;
-        float r1radius = agent1.diameter / 2;
-        float r2radius = agent2.diameter / 2;
-        return Math.sqrt(Math.pow(r2.x - r1.x, 2) + Math.pow(r2.y - r1.y, 2)) < r1radius + r2radius;
     }
 
     @Override
@@ -71,8 +66,8 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
         long currentTime = System.currentTimeMillis();
         //update states
         int epoch=0;
+        boolean reversed=true;
         while (this.stopped == false) {
-            epoch++;
             //check collisions eyes
             for (Agent agent : this.agents) {
                 for (int i = 0; i < agent.eyesLocation.length; i++) {
@@ -95,9 +90,9 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
                         Food food = iter.next();
                         double d = eye.distance(food.location);
                         if (d < eyeDiameter / 2 + food.diameter / 2) {
-                            agent.input[0 + (3 * i)] += food.getColor().getRed();
-                            agent.input[1 + (3 * i)] += food.getColor().getGreen();
-                            agent.input[2 + (3 * i)] += food.getColor().getBlue();
+                            agent.input[0 + (3 * i)] += food.color.getRed();
+                            agent.input[1 + (3 * i)] += food.color.getGreen();
+                            agent.input[2 + (3 * i)] += food.color.getBlue();
                         }
                     }
                     //borders
@@ -176,15 +171,6 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
                 }
             }
 
-            //relocate food
-            for (Iterator<Food> iter = this.foods.iterator(); iter.hasNext();) {
-                Food food = iter.next();
-                food.update();
-                if(food.age>100000){
-                    iter.remove();
-                }
-            }
-
             //spawn food
             int currentnFood = 0;
             int currentnPoison = 0;
@@ -210,8 +196,8 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
                         minDistance = Math.min(minDistance, location.distance(food.location));
                     }
                     l++;
-                } while(minDistance<66 && l<1000);
-                Food newFood = new Food(location, (int)valueFood);
+                } while(minDistance<64 && l<1000);
+                Food newFood = new Food(location, (int)valueFood, reversed);
                 foodsTemp.add(newFood);
             }
             this.foods.addAll(foodsTemp);
@@ -229,12 +215,27 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
                     }
                     l++;
                 } while(minDistance<64 && l<1000);
-                Food newFood = new Food(location, (int)valueFood);
-                newFood.value*=-1;
+                Food newFood = new Food(location, (int)valueFood*-1, reversed);
                 //newFood.value*=0.2f;
                 foodsTemp.add(newFood);
             }
             this.foods.addAll(foodsTemp);
+
+            //relocate food
+            if(epoch%REVERSE_FREQ==0) {
+                System.out.println("REVERSED FOOD");
+                reversed = !reversed;
+            }
+            for (Iterator<Food> iter = this.foods.iterator(); iter.hasNext();) {
+                Food food = iter.next();
+                food.update();
+                if(epoch%REVERSE_FREQ==0){
+                    food.value*=-1;
+                }
+                if(food.age>100000){
+                    iter.remove();
+                }
+            }
 
             //update population
             this.neat.update();
@@ -256,7 +257,11 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
             int totalEnergy = 0;
             int currentnAgents = 0;
             int totalBrainsize = 0;
+            float nSexual = 0;
             for (Agent agent : this.agents) {
+                if(agent.brain.genome.crossover){
+                    nSexual++;
+                }
                 totalFitness += agent.fitness();
                 totalEnergy += agent.energy;
                 currentnAgents += 1;
@@ -274,10 +279,12 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
             if(System.currentTimeMillis()-currentTime>33) {
                 this.repaint();
                 currentTime=System.currentTimeMillis();
+            }
+            if(epoch%100==0){
                 System.out.println("epoch: "+epoch+" valueFood: " + Simulation.valueFood+" totalFood: " + totalFood
                         +" avgAgeFood: "+ totalAgeFood/(nFood-nPoison)+" avgAgePoison: " + totalAgePoison/(nPoison) + " nAgents: "
                         + currentnAgents + " avgFitness " + (totalFitness / (currentnAgents))+" avgEnergy: "+ totalEnergy/(currentnAgents)
-                        + " avgBrainSize " + (totalBrainsize / (currentnAgents)));
+                        + " avgBrainSize " + (totalBrainsize / (currentnAgents)) +" sexualReproduction: "+ nSexual/(currentnAgents));
             }
             if(epoch>500000){
                 //this.sleep=50;
@@ -292,6 +299,8 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
                     e.printStackTrace();
                 }
             }
+
+            epoch++;
         }
     }
 
@@ -301,7 +310,7 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
         g.fillRect(0, 0, this.getWidth(), this.getHeight());
         //draw food first
         for (Food food : new ArrayList<Food>(this.foods)) {
-            g.setColor(food.getColor());
+            g.setColor(food.color);
             g.fillOval(food.location.x - food.diameter / 2, food.location.y - food.diameter / 2, food.diameter, food.diameter);
         }
         float maxEnergy = 1;
@@ -326,6 +335,11 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
         }
         for (Agent agent : new ArrayList<Agent>(this.agents)) {
             g.setColor(agent.color);
+            if(agent.brain.genome.crossover){
+                g.setColor(Color.magenta);
+            } else {
+                g.setColor(Color.cyan);
+            }
             g.fillOval(agent.location.x - agent.diameter / 2, agent.location.y - agent.diameter / 2, agent.diameter, agent.diameter);
             if(maxAgent!=null && agent==maxAgent){
                 g.setColor(new Color(255, 255,0));

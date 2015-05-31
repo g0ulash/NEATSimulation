@@ -17,19 +17,24 @@ public class Food {
     public int age;
     public Point location;
     public int diameter;
-    
-    public Food(Point location, int value){
+    public Color color;
+
+    public Food(Point location, int value, boolean reversed){
         this.value = value;
         this.age = 0;
         this.location = location;
         this.diameter = 14;
-    }
-
-    public Color getColor(){
         if(this.value<0){
-            return Color.red;
+           this.color = Color.red;
         } else{
-            return Color.green;
+            this.color = Color.green;
+        }
+        if(reversed){
+            if(this.value<0){
+                this.color = Color.green;
+            } else{
+                this.color = Color.red;
+            }
         }
     }
     

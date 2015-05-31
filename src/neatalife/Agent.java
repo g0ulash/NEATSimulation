@@ -86,7 +86,11 @@ public class Agent {
         float basecost = Simulation.valueFood/1000;
         float movementcost = (float)Math.sqrt(Math.pow(xVelocity, 2)+Math.pow(yVelocity, 2));
         float braincost = (float) (Math.pow(this.brain.genome.nodes.size() + this.brain.genome.links.size(), 2)/100000);
-        this.energy-=(basecost+braincost+energyCost)*(modifier/2);
+        float reproductionCost = 0;
+        if (this.brain.genome.crossover){
+            reproductionCost = basecost*0f;
+        }
+        this.energy-=(basecost+reproductionCost+braincost+energyCost)*(modifier/2);
         this.age++;
     }
 
