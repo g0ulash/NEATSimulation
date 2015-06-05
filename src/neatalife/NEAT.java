@@ -28,7 +28,7 @@ public class NEAT {
 
     public void update() {
         //clear current innovations
-        //FIXME: reset innovations each generation?
+        //TODO: reset innovations each generation?
         while(this.innovations.size()>this.population.size()){
             this.innovations.remove(0);
         }
@@ -56,9 +56,13 @@ public class NEAT {
             Agent offspring1 = agent1.copy();
             Agent offspring2 = agent2.copy();
             if(agent1.brain.genome.crossover || agent2.brain.genome.crossover) {
-                if (rng.nextFloat() <= agent1.brain.genome.crossoverRate*0.1f) {
+                if (agent1.brain.genome.crossover && agent2.brain.genome.crossover) {
                     //.out.println("CROSSOVER");
                     this.crossover(agent1, agent2, offspring1, offspring2);
+                } else {
+                    if (rng.nextInt(2)==0){
+                        this.crossover(agent1, agent2, offspring1, offspring2);
+                    }
                 }
             }
             newAgents.add(offspring1);
@@ -89,12 +93,14 @@ public class NEAT {
 
     public void crossover(Agent parent1, Agent parent2, Agent offspring1, Agent offspring2){
         //TODO: reactivate disabled links?
+        offspring1.brain.genome.links = new ArrayList<>();
+        offspring2.brain.genome.links = new ArrayList<>();
         for(Link link : parent1.brain.genome.links){
             //check match
             boolean match = false;
             Link matchedLink = null;
             for(Link link2 : parent2.brain.genome.links){
-                if( link.input.id == link2.input.id && link.output.id == link2.output.id){ //FIXME: use innovation number
+                if( link.input.id == link2.input.id && link.output.id == link2.output.id){ //TODO: use innovation number
                     match = true;
                     matchedLink = link2;
                     break;
@@ -121,7 +127,6 @@ public class NEAT {
                     offspring2.brain.genome.links.add(newLink2);
                 }
             } else {
-                //TODO: check missing nodes
                 //add the link to both
                 addLinkToBoth(offspring1, offspring2, link);
             }
@@ -139,7 +144,6 @@ public class NEAT {
             if(match){
                 //ignore, already visited
             } else {
-                //TODO: check missing nodes
                 //add the link to both
                 addLinkToBoth(offspring1, offspring2, link);
             }

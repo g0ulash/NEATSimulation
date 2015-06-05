@@ -96,7 +96,7 @@ public class Brain {
         public void mutate(ArrayList<Link> innovations) {
             //mutate crossover
             if (rng.nextFloat() <= mutationRate*0.1) {
-                //this.crossover = !this.crossover;
+                this.crossover = !this.crossover;
             }
 
             //normal mutations
@@ -119,10 +119,10 @@ public class Brain {
                 boolean exists = false;
                 Link newLink = null;
                 for (Link link : links) { //TODO: optimize
-                    if (!link.enabled && link.input == node1 && link.output == node2) {
+                    if (link.input == node1 && link.output == node2) {
                         exists = true;
                         //reenable
-                        link.enabled = true;
+                        link.enabled = !link.enabled;
                         newLink = link;
                     }
                 }
@@ -140,7 +140,7 @@ public class Brain {
 
             //add node
             ArrayList<Link> newLinks = new ArrayList<>();
-            if (rng.nextFloat() <= mutationRate*0.5 && nodes.size() < 1000) {
+            if (rng.nextFloat() <= mutationRate*0.1 && nodes.size() < 1000) {
                 Link link = links.get(rng.nextInt(links.size()));
                 while(!link.enabled){
                     link = links.get(rng.nextInt(links.size()));

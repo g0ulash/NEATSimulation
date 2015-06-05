@@ -88,7 +88,7 @@ public class Agent {
         float braincost = (float) (Math.pow(this.brain.genome.nodes.size() + this.brain.genome.links.size(), 2)/100000);
         float reproductionCost = 0;
         if (this.brain.genome.crossover){
-            reproductionCost = basecost*0f;
+            reproductionCost = basecost*0.1f;
         }
         this.energy-=(basecost+reproductionCost+braincost+energyCost)*(modifier/2);
         this.age++;
