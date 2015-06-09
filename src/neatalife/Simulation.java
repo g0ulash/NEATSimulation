@@ -34,7 +34,7 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
     public int sleep=0;
     public boolean dynamic = false;
     public int nEpochs = 600000;
-    public int nExperiments = 10;
+    public int nExperiments = 30;
 
     /**
      * Creates new form Simulation2
