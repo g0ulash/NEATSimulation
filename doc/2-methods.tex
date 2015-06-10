@@ -74,7 +74,7 @@ And lastly there is a mutation rate for sexuality, which means that an asexual a
 
 \subsection{NEAT}
 
-To implement the NEAT algorithm, we will refer to the original paper \cite{stanleyneat}.
+To implement the NEAT algorithm, we will refer to the original paper \cite{stanleyneat}. 
 Modeling and evolving Artificial Neural Networks (ANNs) in a genetic algorithm is not trivial, because the structure of different neural networks are not necessarily related.
 To perform crossover operations, the network structures have to be analyzed to find appropriate crossover points, and naturally the genomic representations for ANNs do not clearly show where these points are.
 With NEAT the authors have tried to overcome this problem by encoding history in each element of every single genome.
@@ -155,6 +155,7 @@ The mutation rate for sexuality was $1\%$.
 
 For each condition, $30$ runs were performed.
 A few different type of results were obtained per run per $100$ iterations, namely the average fitnes, average age of the food, average age of the poison, number of agents, average fitness, average energy, average brainsize and average crossover.
+The total amount of iterations was $300,000$.
 To check for the hypothesis, the average crossover was tested for both conditions.
 Other results such as the average fitness, average age of food et cetera will be shown to see what happened over time.
 The parameters were the same for both conditions except for the switch of the food.
