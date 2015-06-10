@@ -134,7 +134,8 @@ Following new generations, NEAT can identify a genome that should be in a new sp
 If other genomes in one species are diverging from their own species towards another, the algorithm will transfer this genome between species.
 Through certain fitness testing, NEAT can identify whether or not new genomes in a species have improved fitness compared to the original genome in that species.
 If a species has not improved over a certain amount of generations, it can be deleted entirely from the population - because this means that a certain innovation did not have enough impact.
-Based on the fitness value of the species, each species will have a percentage of spots for the new generation.\footnote{As of yet both speciation and crossover are not implemented, but are on the to-do list.}
+Based on the fitness value of the species, each species will have a percentage of spots for the new generation.
+Due to time constraints, speciation was not implemented in the experiment.
 
 \begin{figure}[H]
 \centering
@@ -153,6 +154,11 @@ The cost for crossover was $5,000$ and the mutation rates were $10\%$ and $1\%$ 
 The mutation rate for sexuality was $1\%$.
 
 For each condition, $30$ runs were performed.
+A few different type of results were obtained per run per $100$ iterations, namely the average fitnes, average age of the food, average age of the poison, number of agents, average fitness, average energy, average brainsize and average crossover.
+To check for the hypothesis, the average crossover was tested for both conditions.
+Other results such as the average fitness, average age of food et cetera will be shown to see what happened over time.
 The parameters were the same for both conditions except for the switch of the food.
-To test the data, we will first do a normality test (specifically the Shapiro-Wilk test).
-If the data appears to be normally distributed, a t-test will be performed and a Wilcoxon rank-sum test (WRS) otherwise.
+To test the data, first a normality test (specifically the Shapiro-Wilk test) was done after which the appropriate test was used.
+If the data appeared to be normally distributed, a independent sample t-test were to be performed and a Wilcoxon rank-sum test (WRS) otherwise.
+The condition (static and dynamic) is the independent variable and the average crossover is the dependent variable.
+In the test the average crossover for each recorded iteration will be averaged to one average per run, which results in a test with $30$ samples per condition.
