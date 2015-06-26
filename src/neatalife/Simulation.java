@@ -29,12 +29,12 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
     public boolean stopped;
     public int nFood;
     public int nPoison;
-    public static float valueFood=10000;
+    public static float valueFood=10000; //value of food
     public int nAgents;
     public int sleep=0;
-    public boolean dynamic = false;
-    public int nEpochs = 600000;
-    public int nExperiments = 30;
+    public boolean dynamic = false; //whether the environment is dynamic, i.e. changes every 2k iterations.
+    public int nEpochs = 600000; //number of epochs/iterations/update steps to run the simulation for
+    public int nExperiments = 30; //number of experiments to run
 
     /**
      * Creates new form Simulation2
@@ -68,7 +68,7 @@ public class Simulation extends javax.swing.JPanel implements Runnable {
     @Override
     public void run() {
         //init conditions
-        int REVERSE_FREQ = 300000;
+        int REVERSE_FREQ = 300000; //when to swap the energy of poison/food
         if(dynamic){
             REVERSE_FREQ = 2000;
         }

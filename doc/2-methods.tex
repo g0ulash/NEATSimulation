@@ -1,6 +1,6 @@
 \section{Methods}
 
-To see whether sexual reproduction is indeed preferred over asexual reproduction in a fast changing environment, an Artificial Life simulation was designed in Java. In this simulation, NEAT was used as an algorithm to evolve recurrent neural networks, which will be the brains of the agents.
+To see whether sexual reproduction is indeed preferred over asexual reproduction in a fast changing environment, an Artificial Life simulation was designed in Java. In this simulation, NEAT was implemented as an algorithm to evolve recurrent neural networks, which will be the brains of the agents.
 
 \subsection{Simulation}
 
@@ -11,7 +11,7 @@ The simulation is completely written in Java\footnote{For source code, see \url{
 \subsubsection{Environment and Parameters}
 
 The environment consists of an empty field where food and poison are randomly spawned away from other food and agents - see Figure \ref{fig:env} for an example.
-The environmental changes will be the food and poison, which will have some chance of switching and changing in value resulting in food becoming poison and vice versa. 
+The environmental changes will be the food and poison, which will have some chance of switching and changing in value resulting in food becoming poisonous and vice versa.
 Obviously, nutrient food gives agents energy and poisonous food reduces the energy of an agent.
 The amount of food will always be kept constant, so if one piece disappears there will be a new spawned piece of food on a random place.
 There are also the borders, which enclose the environment.
@@ -146,7 +146,7 @@ Due to time constraints, speciation was not implemented in the experiment.
 
 \subsection{Experiment and Analysis}
 In the experiment there were two conditions, a static and dynamic condition.
-In the static condition means that the food will not switch between nutrient and poison, whereas in the dynamic condition this will happen after $2000$ iterations.
+In the static condition the food will not switch between nutrient and poison, whereas in the dynamic condition this will happen after $2000$ iterations.
 The number of agents and food was $50$ where poison and nutrient food were $25$ each.
 The starting energy of the agents was $10,000$, the energy loss and bonus for food was $10,000$ for nutrients and poison respectively.
 The constant for the brain size cost was set to $100,000$ and the energy loss when hitting a border was $2,500$.
@@ -159,7 +159,5 @@ The total amount of iterations was $300,000$.
 To check for the hypothesis, the average crossover was tested for both conditions.
 Other results such as the average fitness, average age of food et cetera will be shown to see what happened over time.
 The parameters were the same for both conditions except for the switch of the food.
-To test the data, first a normality test (specifically the Shapiro-Wilk test) was done after which the appropriate test was used.
-If the data appeared to be normally distributed, a independent sample t-test were to be performed and a Wilcoxon rank-sum test (WRS) otherwise.
 The condition (static and dynamic) is the independent variable and the average crossover is the dependent variable.
 In the test the average crossover for each recorded iteration will be averaged to one average per run, which results in a test with $30$ samples per condition.
